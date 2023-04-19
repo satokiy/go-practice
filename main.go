@@ -2,36 +2,64 @@ package main
 
 import (
 	"fmt"
+	"reflect"
 )
 
-type Data interface{
-	Initial(name string, data []int)
-	PrintData()
-} 
+type General interface{}
 
-type MyData struct {
+// GData is holding General value
+type GData interface {
+	Set(name string, val General) GData
+	Print()
+}
+
+type NData struct {
 	Name string
-	Data []int
+	Data int
 }
 
-func (md *MyData) Initial(name string, data []int) {
-	md.Name = name
-	md.Data = data
+type GDataImpl struct {
+	Name string
+	Data General
 }
 
-func (md *MyData) Check() {
-	fmt.Printf("Check!! [%s]", md.Name)
+func (nd *NData) Set(name string, val General) GData {
+	nd.Name = name
+	if reflect.TypeOf(val).Kind() == reflect.Int {
+		nd.Data = val.(int)
+	}
+	return nd
 }
 
-// PrintData
-func (md *MyData) PrintData() {
-	fmt.Println("Name: ", md.Name)
-	fmt.Println("Data: ", md.Data)
+func (nd *NData) Print() {
+	fmt.Println(nd.Name, ":", nd.Data)
 }
 
+type SData struct {
+	Name string
+	Data string
+}
+
+func (sd *SData) Set(name string, val General) GData {
+	sd.Name = name
+	if reflect.TypeOf(val).Kind() == reflect.String {
+		sd.Data = val.(string)
+	}
+	return sd
+}
+
+func (sd *SData) Print() {
+	fmt.Println(sd.Name, ":", sd.Data)
+}
 
 func main() {
-	var ob Data = new(MyData)
-	ob.Initial("Sachiko", []int{1,2,3})
-	ob.PrintData()
+	data := []GData{}
+	data = append(data, new(NData).Set("num1", 1))
+	data = append(data, new(SData).Set("num2", "aaaa"))
+	data = append(data, new(NData).Set("num3", 3))
+	data = append(data, new(SData).Set("num4", []string{"a", "b"}))
+
+	for _, v := range data {
+		v.Print()
+	}
 }
