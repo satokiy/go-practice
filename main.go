@@ -2,64 +2,48 @@ package main
 
 import (
 	"fmt"
-	"reflect"
+	"strconv"
+	"time"
 )
 
-type General interface{}
-
-// GData is holding General value
-type GData interface {
-	Set(name string, val General) GData
-	Print()
-}
-
-type NData struct {
-	Name string
-	Data int
-}
-
-type GDataImpl struct {
-	Name string
-	Data General
-}
-
-func (nd *NData) Set(name string, val General) GData {
-	nd.Name = name
-	if reflect.TypeOf(val).Kind() == reflect.Int {
-		nd.Data = val.(int)
+func hello(s string, t int, n int) {
+	for i := 1; i < n; i++ {
+		fmt.Printf("<%d %s>", i, s)
+		time.Sleep(time.Duration(t) * time.Millisecond)
 	}
-	return nd
 }
 
-func (nd *NData) Print() {
-	fmt.Println(nd.Name, ":", nd.Data)
+func prmsg(n int, s string) {
+	fmt.Println(s)
+	time.Sleep(time.Duration(n) * time.Millisecond)
 }
 
-type SData struct {
-	Name string
-	Data string
-}
-
-func (sd *SData) Set(name string, val General) GData {
-	sd.Name = name
-	if reflect.TypeOf(val).Kind() == reflect.String {
-		sd.Data = val.(string)
+func first(n int, c chan string) {
+	const name string = "first-"
+	for i := 0; i < n; i++ {
+		s := name + strconv.Itoa(i)
+		prmsg(n, s)
+		c <- s
 	}
-	return sd
 }
 
-func (sd *SData) Print() {
-	fmt.Println(sd.Name, ":", sd.Data)
+func second(n int, c chan string) {
+	for i := 0; i < 10; i++ {
+		prmsg(n, "second-["+<-c+"]")
+	}
+}
+
+func total(n int, c chan int) {
+	t := 0
+	for i := 1; i <= n; i++ {
+		t += i
+	}
+	c <- t
 }
 
 func main() {
-	data := []GData{}
-	data = append(data, new(NData).Set("num1", 1))
-	data = append(data, new(SData).Set("num2", "aaaa"))
-	data = append(data, new(NData).Set("num3", 3))
-	data = append(data, new(SData).Set("num4", []string{"a", "b"}))
-
-	for _, v := range data {
-		v.Print()
-	}
+	c := make(chan string)
+	go first(10, c)
+	second(10, c)
+	fmt.Println("end")
 }
